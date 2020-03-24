@@ -1,0 +1,31 @@
+{application, eknife,
+ [
+  {description, "Erlang Swiss Army knife"},
+  {vsn, "1.0.0"},
+  {modules, [
+    pubsub,
+    oauth2c,
+    rest,
+    slugs,
+    utils,
+    images
+  ]},
+  {registered, []},
+  {applications, [
+    kernel,
+    stdlib,
+    inets,
+    asn1,
+    ssl,
+    public_key,
+    crypto,
+    gun,
+    gproc
+  ]},
+  {included_applications, [
+    jiffy,
+    iso8601,
+    io_libc
+  ]},
+  {env, []}
+ ]}.

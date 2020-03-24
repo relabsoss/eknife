@@ -1,0 +1,7 @@
+/_build
+/log
+/rebar.lock
+*.crashdump
+*.erl.result
+.DS_Store
+/rebar3
