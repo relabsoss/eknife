@@ -8,7 +8,8 @@
     rest,
     slugs,
     utils,
-    images
+    images, 
+    cast
   ]},
   {registered, []},
   {applications, [
