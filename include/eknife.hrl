@@ -1,11 +1,11 @@
+-include_lib("kernel/include/logger.hrl").
+
 % timer
 
 -define(S2MS(S), S * 1000).
 -define(AFTER(Timeout, Event), {ok, _} = timer:send_after(Timeout, Event)).
 
 -define(GUN_TIMEOUT, ?S2MS(60)).
-
-
 
 % flow
 
@@ -21,18 +21,6 @@
 
 -define(FROM_JSON(D), jiffy:decode(D, [return_maps])).
 -define(TO_JSON(D), jiffy:encode(D)).
-
-% logger
-
--define(LOG(Level, Msg, Params), logger:Level("[~p:~p] " Msg, [?MODULE, ?LINE] ++ Params)).
--define(ERROR(Msg), ?LOG(error, Msg, [])).
--define(ERROR(Msg, Params), ?LOG(error, Msg, Params)).
--define(INFO(Msg), ?LOG(info, Msg, [])).
--define(INFO(Msg, Params), ?LOG(info, Msg, Params)).
--define(WARNING(Msg), ?LOG(warning, Msg, [])).
--define(WARNING(Msg, Params), ?LOG(warning, Msg, Params)).
--define(DEBUG(Msg), ?LOG(debug, Msg, [])).
--define(DEBUG(Msg, Params), ?LOG(debug, Msg, Params)).
 
 % pub/sub (gproc)
 

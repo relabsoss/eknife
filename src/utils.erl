@@ -54,14 +54,14 @@ stacktrace(Trace) ->
 from_json(Msg, Default) ->
   try ?FROM_JSON(Msg) of
     {error, Error} -> 
-      ?ERROR("Error ~p in decoding ~p", [Error, Msg]),
+      ?LOG_ERROR("Error ~p in decoding ~p", [Error, Msg]),
       Default;
     {error, Error, Str} -> 
-      ?ERROR("Error ~p in decoding ~p", [Error, Str]),
+      ?LOG_ERROR("Error ~p in decoding ~p", [Error, Str]),
        Default;
     Data -> Data
   catch Exc:Exp:_ -> 
-    ?ERROR("Exception ~p:~p in decoding of ~p", [Exc, Exp, Msg]),
+    ?LOG_ERROR("Exception ~p:~p in decoding of ~p", [Exc, Exp, Msg]),
     Default 
   end.
 
@@ -71,12 +71,12 @@ to_json(Msg) ->
     case ?TO_JSON(Msg) of
       Str when is_binary(Str) -> Str;
       Err -> 
-        ?ERROR("Error encoding to JSON ~p in ~p", [Err, Msg]), 
+        ?LOG_ERROR("Error encoding to JSON ~p in ~p", [Err, Msg]), 
         ?TO_JSON([])
     end
   catch 
     Exc:Exp:Stacktrace -> 
-      ?ERROR("Exception ~p:~p in encoding of ~p\n~p", [Exc, Exp, Msg, Stacktrace]),
+      ?LOG_ERROR("Exception ~p:~p in encoding of ~p\n~p", [Exc, Exp, Msg, Stacktrace]),
       <<"{}">>
   end.
 

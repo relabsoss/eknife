@@ -127,6 +127,5 @@ get_mime_from_extension(Extension) ->
     <<".mpg">> ->
       {ok, <<"video">>, <<"video/*">>};
     _ ->
-      ?ERROR("Unknown extension ~p", [Extension]),
       {error, undefined, <<"">>}
   end.
