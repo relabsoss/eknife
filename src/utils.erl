@@ -6,6 +6,8 @@
           to_json/1,
 
           concat/2,
+          join/1,
+          join/2,
 
           to_integer/1,
           to_integer/2,
@@ -81,6 +83,13 @@ to_json(Msg) ->
   end.
 
 % combine
+
+-spec join(list()) -> list().
+join(List) -> 
+  join(List, ", ").
+-spec join(list(), list()) -> list().
+join(List, Sep) -> 
+  lists:concat(lists:join(Sep, List)).
 
 -spec concat([binary()], binary()) -> binary().
 concat([], _) -> 
