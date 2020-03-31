@@ -232,12 +232,9 @@ md5b(S) ->
 
 -spec md5b64(binary()) -> binary().
 md5b64(S) ->
-  binary:replace(
-    binary:replace(
-      base64:encode(crypto:hash(md5, S)), 
-      [<<"+">>, <<"/">>, <<" ">>, <<"-">>], 
-      <<"_">>, 
-      [global]), 
-    <<"=">>, 
-    <<>>, 
-    [global]).
+  lists:foldl(fun({From, To}, Str) -> binary:replace(Str, From, To, [global]) end, base64:encode(crypto:hash(md5, S)), [
+      {<<"+">>, <<"-">>},
+      {<<"/">>, <<"_">>},
+      {<<"=">>, <<>>}
+    ]).
+
