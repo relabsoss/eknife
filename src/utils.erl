@@ -138,11 +138,15 @@ date_to_timestamp({Date, {H, M, S}}) ->
   RS = round(S),
   calendar:datetime_to_gregorian_seconds({Date, {H, M, RS}}) - ?EPOCH + (S - RS).
 
--spec timestamp_to_date(integer()) -> {{integer(), integer(), integer()}, {integer(), integer(), integer()}}.
-timestamp_to_date(TS) ->
+-spec timestamp_to_date(float() | integer()) -> {{integer(), integer(), integer()}, {integer(), integer(), integer()}}.
+timestamp_to_date(TS) when is_float(TS) ->
   RTS = math:floor(TS),
   {Date, {H, M, RS}} = calendar:gregorian_seconds_to_datetime(RTS + ?EPOCH),
-  {Date, {H, M, RS + (TS - RTS)}}.
+  {Date, {H, M, RS + (TS - RTS)}};
+timestamp_to_date(TS) ->
+  Base = calendar:datetime_to_gregorian_seconds({{1970,1,1},{0,0,0}}),
+  calendar:gregorian_seconds_to_datetime(Base + TS).
+
 
 -spec parse_date({{integer(), integer(), integer()}, {integer(), integer(), integer()}} | string()) 
   -> {{integer(), integer(), integer()}, {integer(), integer(), integer()}}.
