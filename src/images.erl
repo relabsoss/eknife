@@ -81,7 +81,7 @@ get_jpeg_block(<<?M_MARK, ?M_SOF0, _:3/binary, Height:2/big-unsigned-integer-uni
   {Width, Height};
 get_jpeg_block(<<?M_MARK, ?M_SOF2, _:3/binary, Height:2/big-unsigned-integer-unit:8, Width:2/big-unsigned-integer-unit:8, _Rest/binary>>) ->
   {Width, Height};
-get_jpeg_block(<<?M_MARK, _Block:8, Len:2/big-unsigned-integer-unit:8, Rest/binary>>) ->
+get_jpeg_block(<<?M_MARK, _BlockId:8, Len:2/big-unsigned-integer-unit:8, Rest/binary>>) ->
   LenX = Len - 2,
   <<_Block:LenX/binary, More/binary>> = Rest,
   get_jpeg_block(More);
