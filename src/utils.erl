@@ -30,7 +30,8 @@
 
           hash/1,
           md5b/1,
-          md5b64/1
+          md5b64/1,
+	  b64url/1
         ]).
 
 -include("eknife.hrl").
@@ -236,9 +237,12 @@ md5b(S) ->
 
 -spec md5b64(binary()) -> binary().
 md5b64(S) ->
-  lists:foldl(fun({From, To}, Str) -> binary:replace(Str, From, To, [global]) end, base64:encode(crypto:hash(md5, S)), [
+  b64url(crypto:hash(md5, S)).
+
+-spec b64url(binary()) -> binary().
+b64url(S) ->
+  lists:foldl(fun({From, To}, Str) -> binary:replace(Str, From, To, [global]) end, base64:encode(S), [
       {<<"+">>, <<"-">>},
       {<<"/">>, <<"_">>},
       {<<"=">>, <<>>}
     ]).
-
