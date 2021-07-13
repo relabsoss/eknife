@@ -1,4 +1,4 @@
--module(slugs).
+-module(tr).
 
 -export([
           slugify/1,

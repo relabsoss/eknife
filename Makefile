@@ -8,3 +8,6 @@ $(REBAR):
 
 compile: $(REBAR)
 	@$(REBAR) compile
+
+xref: $(REBAR)
+	@$(REBAR) xref

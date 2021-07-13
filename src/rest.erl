@@ -1,6 +1,7 @@
 -module(rest).
 -export([
-          request/6          
+          request/6,
+          request/7
         ]).
 
 -include("eknife.hrl").
@@ -9,12 +10,32 @@
 -spec request(atom(), atom() | {atom(), any()}, list(), list(integer()), map(), map() | binary() | list()) -> 
   {ok, integer(), map(), map() | list() | binary() } | {error, integer(), map(), map() | list() | binary()} | {error, any()}.
 request(Method, Type, URL, Expect, InHeaders, Body) ->
+  request(Method, Type, URL, Expect, InHeaders, Body, []).
+
+-spec request(atom(), atom() | {atom(), any()}, list(), list(integer()), map(), map() | binary() | list(), list(tuple())) -> 
+  {ok, integer(), map(), map() | list() | binary() } | {error, integer(), map(), map() | list() | binary()} | {error, any()}.
+request(Method, Type, URL, Expect, InHeaders, Body, TransportOptions) ->
+  try request_throwable(Method, Type, URL, Expect, InHeaders, Body, TransportOptions) of
+    Any -> 
+      Any
+  catch
+    Type:Reason:Stacktrace  ->
+      ?LOG_ERROR("Exception catched ~p:~p -> ~p. ~p", [Type, Reason, utils:stacktrace(Stacktrace), [Method, Type, URL, Expect, InHeaders]]),
+      {error, exception}
+  end.
+
+request_throwable(Method, Type, URL, Expect, InHeaders, Body, TransportOptions) ->
   Headers = maps:merge(InHeaders, #{
       <<"Accept">> => get_access_type(Type) ++ ", */*;q=0.9",
       <<"Content-Type">> => get_content_type(Type)
     }),  
-  {ok, {_Scheme, _, Host, Port, Path, QS}} = http_uri:parse(URL),
-  {ok, ConnPid} = gun:open(Host, Port, #{ protocols => [http] }),
+  #{ scheme := _Scheme, host := Host, port := Port, path := Path, query := QS } = uri_string:parse(cast:to_list(URL)),
+  {ok, ConnPid} = case TransportOptions of
+    [] ->
+      gun:open(Host, Port, #{ protocols => [http] });
+    _ ->
+      gun:open(Host, Port,#{ protocols => [http], transport => tls, transport_opts => TransportOptions })
+  end,
   {ok, _Protocol} = gun:await_up(ConnPid, ?GUN_TIMEOUT),
   StreamRef = case lists:any(fun(I) -> I =:= Method end, [post, put]) of  
     true -> 
