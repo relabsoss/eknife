@@ -31,7 +31,7 @@ request_throwable(Method, Type, URL, Expect, InHeaders, Body, TransportOptions) 
     }),  
   URI = uri_string:parse(cast:to_list(URL)),
   Host = maps:get(host, URI, "localhost"),
-  Port = maps:get(port, URI, 80),
+  Port = maps:get(port, URI, case maps:get(scheme, URI, "http") of "https" -> 443; _ -> 80 end),
   Path = maps:get(path, URI, "/"),
   QS = maps:get(query, URI, ""),
   {ok, ConnPid} = case TransportOptions of
