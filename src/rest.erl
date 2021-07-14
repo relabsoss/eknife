@@ -29,7 +29,11 @@ request_throwable(Method, Type, URL, Expect, InHeaders, Body, TransportOptions) 
       <<"Accept">> => get_access_type(Type) ++ ", */*;q=0.9",
       <<"Content-Type">> => get_content_type(Type)
     }),  
-  #{ scheme := _Scheme, host := Host, port := Port, path := Path, query := QS } = uri_string:parse(cast:to_list(URL)),
+  URI = uri_string:parse(cast:to_list(URL)),
+  Host = maps:get(host, URI, "localhost"),
+  Port = maps:get(port, URI, 80),
+  Path = maps:get(path, URI, "/"),
+  QS = maps:get(query, URI, ""),
   {ok, ConnPid} = case TransportOptions of
     [] ->
       gun:open(Host, Port, #{ protocols => [http] });
