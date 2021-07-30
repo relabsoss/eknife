@@ -31,7 +31,7 @@
           hash/1,
           md5b/1,
           md5b64/1,
-	  b64url/1
+	        b64url/1
         ]).
 
 -include("eknife.hrl").
