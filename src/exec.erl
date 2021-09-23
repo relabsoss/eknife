@@ -18,7 +18,7 @@ drop_port(Port) ->
         undefined ->
           erlang:port_close(Port);
         Pid ->
-          os:cmd(utils:to_list(io_libc:format("kill -9 %d", [Pid])))
+          os:cmd(cast:to_list(io_libc:format("kill -9 %d", [Pid])))
       end,
       ok
   end.

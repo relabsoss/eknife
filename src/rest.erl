@@ -134,8 +134,8 @@ parse_body("text/javascript", Body) ->
   utils:from_json(Body, #{}); 
 parse_body("application/x-www-form-urlencoded", Body) -> 
   maps:from_list(cow_qs:parse_qs(Body));
-parse_body("text/plain", Body) -> 
-  maps:from_list(cow_qs:parse_qs(Body)); % damn you, Facebook
+% parse_body("text/plain", Body) -> 
+%   maps:from_list(cow_qs:parse_qs(Body)); % damn you, Facebook
 parse_body(_, Body) -> 
   Body.
 
