@@ -62,7 +62,8 @@ from_json(Msg, Default) ->
     {error, Error, Str} -> 
       ?LOG_ERROR("Error ~p in decoding ~p", [Error, Str]),
        Default;
-    Data -> Data
+    Data -> 
+      Data
   catch Exc:Exp:_ -> 
     ?LOG_ERROR("Exception ~p:~p in decoding of ~p", [Exc, Exp, Msg]),
     Default 
@@ -71,17 +72,30 @@ from_json(Msg, Default) ->
 -spec to_json(list() | map()) -> binary().
 to_json(Msg) ->
   try
-    case ?TO_JSON(Msg) of
-      Str when is_binary(Str) -> Str;
-      Err -> 
+    case ?TO_JSON(json_prepare(Msg)) of
+      Err when is_tuple(Err) -> 
         ?LOG_ERROR("Error encoding to JSON ~p in ~p", [Err, Msg]), 
-        ?TO_JSON([])
+        ?TO_JSON(json_default(Msg));
+      IOList -> 
+        IOList
     end
   catch 
     Exc:Exp:Stacktrace -> 
       ?LOG_ERROR("Exception ~p:~p in encoding of ~p\n~p", [Exc, Exp, Msg, Stacktrace]),
-      <<"{}">>
+      <<"null">>
   end.
+
+json_prepare(Msg) when is_list(Msg) ->
+  list_to_json(Msg);
+json_prepare(Msg) when is_map(Msg) ->
+  map_to_json(Msg);
+json_prepare(Msg) ->
+  Msg.
+
+json_default(Msg) when is_list(Msg) ->
+  [];
+json_default(Msg) ->
+  #{}.  
 
 % combine
 
