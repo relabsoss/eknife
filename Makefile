@@ -11,3 +11,7 @@ compile: $(REBAR)
 
 xref: $(REBAR)
 	@$(REBAR) xref
+
+commit: $(REBAR)
+	@$(REBAR) format
+	git commit .
