@@ -100,7 +100,7 @@ json_prepare(Msg) when is_map(Msg) -> map_to_json(Msg);
 json_prepare(Msg) -> Msg.
 
 json_default(Msg) when is_list(Msg) -> [];
-json_default(Msg) -> #{}.
+json_default(_Msg) -> #{}.
 
 % combine
 
