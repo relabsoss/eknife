@@ -1,6 +1,6 @@
 -module(rest).
 
--export([request/6, request/7]).
+-export([request/6, request/7, parse/2]).
 
 -include("eknife.hrl").
 
