@@ -188,7 +188,9 @@ get_mime_from_extension(Extension) ->
         <<".png">> -> {ok, <<"photo">>, <<"image/png">>};
         <<".jpg">> -> {ok, <<"photo">>, <<"image/jpeg">>};
         <<".jpeg">> -> {ok, <<"photo">>, <<"image/jpeg">>};
-        <<".mp4">> -> {ok, <<"video">>, <<"video/*">>};
-        <<".mpg">> -> {ok, <<"video">>, <<"video/*">>};
+        <<".mp4">> -> {ok, <<"video">>, <<"video/mp4">>};
+        <<".mpg">> -> {ok, <<"video">>, <<"video/mpeg">>};
+        <<".mp3">> -> {ok, <<"audio">>, <<"audio/mpeg">>};
+        <<".m4a">> -> {ok, <<"audio">>, <<"audio/mp4">>};
         _ -> {error, undefined, <<"">>}
     end.
