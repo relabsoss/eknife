@@ -45,86 +45,113 @@ request(Method, Type, URL, Expect, InHeaders, Body,
 
 request_throwable(Method, Type, URL, Expect, InHeaders,
                   Body, TransportOptions) ->
-    Headers = maps:merge(InHeaders,
-                         #{<<"Accept">> =>
-                               get_access_type(Type) ++ ", */*;q=0.9",
-                           <<"Content-Type">> => get_content_type(Type)}),
-    URI = uri_string:parse(cast:to_list(URL)),
-    Host = maps:get(host, URI, "localhost"),
-    Port = maps:get(port,
-                    URI,
-                    case maps:get(scheme, URI, "http") of
-                        "https" -> 443;
-                        _ -> 80
-                    end),
-    Path = maps:get(path, URI, "/"),
-    QS = maps:get(query, URI, ""),
-    {ok, ConnPid} = case TransportOptions of
-                        [] -> gun:open(Host, Port, #{protocols => [http]});
-                        _ ->
-                            gun:open(Host,
-                                     Port,
-                                     #{protocols => [http], transport => tls,
-                                       transport_opts => TransportOptions})
-                    end,
-    {ok, _Protocol} = gun:await_up(ConnPid, ?GUN_TIMEOUT),
-    StreamRef = case lists:any(fun (I) -> I =:= Method end,
-                               [post, put])
-                    of
-                    true ->
-                        EncBody = encode_body(Type, Body),
-                        gun:Method(ConnPid,
-                                   Path ++ QS,
-                                   maps:to_list(Headers#{<<"content-length">> =>
-                                                             byte_size(EncBody)}),
-                                   EncBody);
-                    false when length(QS) =:= 0 ->
-                        gun:Method(ConnPid,
-                                   lists:concat([Path,
-                                                 "?",
-                                                 binary_to_list(cow_qs:qs(maps:to_list(Body)))]),
-                                   maps:to_list(Headers));
-                    false when length(QS) =/= 0 ->
-                        gun:Method(ConnPid,
-                                   lists:concat([Path,
-                                                 QS,
-                                                 "&",
-                                                 binary_to_list(cow_qs:qs(maps:to_list(Body)))]),
-                                   maps:to_list(Headers));
-                    false ->
-                        gun:Method(ConnPid, Path ++ QS, maps:to_list(Headers))
-                end,
-    Resp = case gun:await(ConnPid, StreamRef, ?GUN_TIMEOUT)
-               of
-               {response, fin, Status, RespHeaders} ->
-                   case lists:any(fun (I) -> I =:= Status end, Expect) of
-                       true -> {ok, Status, RespHeaders, #{}};
-                       false when Expect =:= [] ->
-                           {ok, Status, RespHeaders, #{}};
-                       false -> {error, Status, RespHeaders, #{}}
-                   end;
-               {response, nofin, Status, RespHeadersL} ->
-                   RespHeaders =
-                       maps:from_list(keys_to_lower(RespHeadersL)),
-                   case gun:await_body(ConnPid, StreamRef, ?GUN_TIMEOUT) of
-                       {ok, RespBody} ->
+    case url_parse(URL) of
+        undefined -> {error, invalid_url};
+        {Host, Port, Path, QS} ->
+            Headers = maps:merge(InHeaders,
+                                 #{<<"Accept">> =>
+                                       get_access_type(Type) ++ ", */*;q=0.9",
+                                   <<"Content-Type">> => get_content_type(Type)}),
+            {ok, ConnPid} = case TransportOptions of
+                                [] -> gun:open(Host, Port, #{protocols => [http]});
+                                _ ->
+                                    gun:open(Host,
+                                             Port,
+                                             #{protocols => [http], transport => tls,
+                                               transport_opts => TransportOptions})
+                            end,
+            {ok, _Protocol} = gun:await_up(ConnPid, ?GUN_TIMEOUT),
+            StreamRef = case lists:any(fun (I) -> I =:= Method end,
+                                       [post, put])
+                            of
+                            true ->
+                                EncBody = encode_body(Type, Body),
+                                gun:Method(ConnPid,
+                                           Path ++ QS,
+                                           maps:to_list(Headers#{<<"content-length">> =>
+                                                                     byte_size(EncBody)}),
+                                           EncBody);
+                            false when length(QS) =:= 0 ->
+                                gun:Method(ConnPid,
+                                           lists:concat([Path,
+                                                         "?",
+                                                         binary_to_list(cow_qs:qs(maps:to_list(Body)))]),
+                                           maps:to_list(Headers));
+                            false when length(QS) =/= 0 ->
+                                gun:Method(ConnPid,
+                                           lists:concat([Path,
+                                                         QS,
+                                                         "&",
+                                                         binary_to_list(cow_qs:qs(maps:to_list(Body)))]),
+                                           maps:to_list(Headers));
+                            false ->
+                                gun:Method(ConnPid, Path ++ QS, maps:to_list(Headers))
+                        end,
+            Resp = case gun:await(ConnPid, StreamRef, ?GUN_TIMEOUT)
+                       of
+                       {response, fin, Status, RespHeaders} ->
                            case lists:any(fun (I) -> I =:= Status end, Expect) of
-                               true ->
-                                   {ok, Status, RespHeaders, parse(RespHeaders, RespBody)};
+                               true -> {ok, Status, RespHeaders, #{}};
                                false when Expect =:= [] ->
-                                   {ok, Status, RespHeaders, parse(RespHeaders, RespBody)};
-                               false ->
-                                   {error,
-                                    Status,
-                                    RespHeaders,
-                                    parse(RespHeaders, RespBody)}
+                                   {ok, Status, RespHeaders, #{}};
+                               false -> {error, Status, RespHeaders, #{}}
                            end;
-                       Error -> {error, Error}
-                   end;
-               Any -> Any
-           end,
-    gun:shutdown(ConnPid),
-    Resp.
+                       {response, nofin, Status, RespHeadersL} ->
+                           RespHeaders =
+                               maps:from_list(keys_to_lower(RespHeadersL)),
+                           case gun:await_body(ConnPid, StreamRef, ?GUN_TIMEOUT) of
+                               {ok, RespBody} ->
+                                   case lists:any(fun (I) -> I =:= Status end, Expect) of
+                                       true ->
+                                           {ok, Status, RespHeaders, parse(RespHeaders, RespBody)};
+                                       false when Expect =:= [] ->
+                                           {ok, Status, RespHeaders, parse(RespHeaders, RespBody)};
+                                       false ->
+                                           {error,
+                                            Status,
+                                            RespHeaders,
+                                            parse(RespHeaders, RespBody)}
+                                   end;
+                               Error -> {error, Error}
+                           end;
+                       Any -> Any
+                   end,
+            gun:shutdown(ConnPid),
+            Resp
+    end.
+
+url_parse(URL) ->
+    case uri_string:parse(cast:to_list(URL)) of
+        URI when is_map(URI) ->
+            {maps:get(host, URI, "localhost"),
+             maps:get(port,
+                      URI,
+                      case maps:get(scheme, URI, "http") of
+                          "https" -> 443;
+                          _ -> 80
+                      end),
+             maps:get(path, URI, "/"),
+             maps:get(query, URI, "")};
+        Any ->
+            ?LOG_DEBUG("Can't parse URL ~p traditional way - "
+                       "~p, down to custom",
+                       [URL, Any]),
+            case re:run(URL,
+                        "([a-z0-9]*):\\/\\/([^:\\/]+)(:[0-9]+)?([^?]*)"
+                        "(\\??.*)?",
+                        [{capture, all, list}])
+                of
+                {match, [_, "https", Host, [], Path, QS]} ->
+                    {Host, 443, Path, QS};
+                {match, [_, _, Host, [], Path, QS]} ->
+                    {Host, 80, Path, QS};
+                {match, [_, _Proto, Host, PortS, Path, QS]} ->
+                    {Host, utils:to_integer(PortS, 80), Path, QS};
+                Other ->
+                    ?LOG_WARNING("Can't parse URL ~p - ~p", [URL, Other]),
+                    undefined
+            end
+    end.
 
 keys_to_lower(L) ->
     [{string:lowercase(K), V} || {K, V} <- L].

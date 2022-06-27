@@ -7,11 +7,11 @@ $(REBAR):
 	chmod +x $(REBAR)
 
 compile: $(REBAR)
-	@$(REBAR) compile
+	$(REBAR) compile
 
 xref: $(REBAR)
-	@$(REBAR) xref
+	$(REBAR) xref
 
 commit: $(REBAR)
-	@$(REBAR) format
+	ERL_AFLAGS="-enable-feature all" $(REBAR) format
 	git commit .
