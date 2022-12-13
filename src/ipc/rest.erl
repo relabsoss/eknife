@@ -179,7 +179,7 @@ url_parse(URL) ->
 keys_to_lower(L) when is_list(L) ->
     [{string:lowercase(K), V} || {K, V} <- L];
 keys_to_lower(M) when is_map(M) ->
-    maps:from_list(keys_to_lower(maps:from_list(M))).
+    maps:from_list(keys_to_lower(maps:to_list(M))).
 
 get_access_type(html) -> "text/html";
 get_access_type(qs) ->
